@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import prisma from '../prisma/client';
+import authenticateJWT from '../middleware/auth';
 
 const router = express.Router();
 
@@ -43,7 +45,7 @@ router.post('/register', async (req: Request<{}, {}, RegisterRequestBody>, res: 
 });
 
 // Login a user
-router.post('/login', async (req: Request<{}, {}, RegisterRequestBody>, res: any) => {
+router.post('/login', async (req: Request, res: any) => {
     const { email, password } = req.body;
 
     try {
@@ -63,12 +65,19 @@ router.post('/login', async (req: Request<{}, {}, RegisterRequestBody>, res: any
             return res.status(400).json({ error: 'Invalid email or password' });
         }
 
-        // Successfully logged in (you can generate a token here if you plan to use JWT)
-        res.status(200).json({ message: 'Login successful', user: { id: user.id, email: user.email } });
+        // Generate a JWT
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '1h' });
+
+        // Successfully logged in
+        res.status(200).json({ message: 'Login successful', token });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Something went wrong' });
     }
 });
 
+
+router.get('/profile', authenticateJWT, (req: any, res: any) => {
+    res.json({ message: 'This is the user profile', user: req.user });
+});
 export default router;
