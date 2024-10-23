@@ -49,6 +49,14 @@ router.get('/', async (req: RequestWithUser, res: any) => {
         // Fetch all passwords belonging to the authenticated user
         const userPasswords = await prisma.userPassword.findMany({
             where: { userId: String(req.user.id) },
+            orderBy: [
+                {
+                    websiteName: 'asc',
+                },
+                {
+                    updatedAt: 'desc'
+                }
+            ]
         });
 
         // Decrypt passwords before sending them in the response
