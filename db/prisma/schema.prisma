@@ -8,20 +8,23 @@ generator client {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  userPasswords UserPassword[]
+  id                       String         @id @default(uuid())
+  email                    String         @unique
+  password                 String
+  isUserEmailVerified      Boolean        @default(false)
+  emailVerificationToken   String?
+  emailVerificationExpires DateTime?
+  userPasswords            UserPassword[]
 }
 
 model UserPassword {
-  id           String   @id @default(uuid())
-  userId       String
-  website      String
-  websiteName  String
-  username     String
-  password     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id]) // Ensure 'id' is of type String
+  id          String   @id @default(uuid())
+  userId      String
+  website     String
+  websiteName String
+  username    String
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id]) // Ensure 'id' is of type String
 }
