@@ -14,6 +14,7 @@ model User {
   isUserEmailVerified      Boolean        @default(false)
   emailVerificationToken   String?
   emailVerificationExpires DateTime?
+  resendEmailAttempts      Int            @default(0)
   userPasswords            UserPassword[]
 }
 
