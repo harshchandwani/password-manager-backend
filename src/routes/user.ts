@@ -12,6 +12,7 @@ const router = express.Router();
 interface RegisterRequestBody {
     email: string;
     password: string;
+    isActive: boolean;
 }
 // Register a new user
 router.post('/register', async (req: Request<{}, {}, RegisterRequestBody>, res: any) => {
@@ -131,6 +132,50 @@ router.post('/verify-email', async (req: Request, res: any) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to verify email' });
+    }
+});
+
+router.post('/resend-verification-email', async (req: Request, res: any) => {
+    const { email } = req.body;
+
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        // Check if the user is found, unverified, and within the resend limit
+        if (!user) return res.status(404).json({ error: "User not found" });
+        if (user.isActive) return res.status(403).json({ error: "Account is deactivated" });
+        if (user.isUserEmailVerified) return res.status(400).json({ error: "Email already verified" });
+        if (user.resendEmailAttempts >= 5) {
+            await prisma.user.update({
+                where: { email },
+                data: { isActive: true },
+            });
+            return res.status(403).json({ error: "Resend limit reached; account deactivated." });
+        }
+
+        // Generate a new token for verification
+        const token = jwt.sign({ email }, process.env.JWT_SECRET!, { expiresIn: '1h' });
+
+        // Update user's resend attempts and token details
+        await prisma.user.update({
+            where: { email },
+            data: {
+                emailVerificationToken: token,
+                emailVerificationExpires: new Date(Date.now() + 3600 * 1000),
+                resendEmailAttempts: { increment: 1 },
+            },
+        });
+
+        // Send verification email
+        await axios.post(`${process.env.EMAIL_VERIFICATION_SERVICE_URL}/send-verification-email`, {
+            email,
+            token,
+        });
+
+        res.status(200).json({ message: "Verification email resent successfully." });
+    } catch (error) {
+        console.error("Error resending email:", error);
+        res.status(500).json({ error: "Failed to resend verification email." });
     }
 });
 
