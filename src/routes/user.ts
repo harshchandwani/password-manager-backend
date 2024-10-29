@@ -5,7 +5,7 @@ import prisma from '../prisma/client';
 import authenticateJWT from '../middleware/auth';
 import axios from 'axios';
 import { addHours } from 'date-fns';
-
+import { queueVerificationEmail } from '../utils/email';
 const router = express.Router();
 
 // Define the shape of the request body for registration and login
@@ -48,11 +48,8 @@ router.post('/register', async (req: Request<{}, {}, RegisterRequestBody>, res: 
             }
         });
 
-        // Send request to email verification service
-        await axios.post(`${process.env.EMAIL_VERIFICATION_SERVICE_URL}/send-verification-email`, {
-            email,
-            token,
-        });
+        // Add email verification task to the Redis queue
+        await queueVerificationEmail(email, token);
 
         res.status(201).json({ message: 'User created successfully. Please check your email for verification.' });
     } catch (error) {
@@ -166,11 +163,8 @@ router.post('/resend-verification-email', async (req: Request, res: any) => {
             },
         });
 
-        // Send verification email
-        await axios.post(`${process.env.EMAIL_VERIFICATION_SERVICE_URL}/send-verification-email`, {
-            email,
-            token,
-        });
+        // Add email verification task to the Redis queue
+        await queueVerificationEmail(email, token);
 
         res.status(200).json({ message: "Verification email resent successfully." });
     } catch (error) {
@@ -180,3 +174,4 @@ router.post('/resend-verification-email', async (req: Request, res: any) => {
 });
 
 export default router;
+
