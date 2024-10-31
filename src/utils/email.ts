@@ -2,6 +2,8 @@
 import nodemailer from 'nodemailer';
 import Redis from "../utils/redis";  // Import Redis class
 import dotenv from "dotenv";
+import path from 'path';
+import ejs from 'ejs';
 
 dotenv.config();
 // Set up nodemailer transporter
@@ -19,11 +21,15 @@ const transporter = nodemailer.createTransport({
 // Function to send email directly
 const sendEmail = async (email: string, token: string) => {
     const url = `${process.env.FRONTEND_URL}/verified-email?token=${token}`;
+
+    const templatePath = path.join(__dirname, 'templates', 'verificationEmailTemplate.ejs');
+    const htmlContent = await ejs.renderFile(templatePath, { verification_link: url });
+
     const mailOptions = {
         from: process.env.GMAIL_USER,
         to: email,
         subject: 'Verify Your Email',
-        html: `<p>Click <a href="${url}">here</a> to verify your email.</p>`,
+        html: htmlContent,
     };
     try {
         await transporter.sendMail(mailOptions);
