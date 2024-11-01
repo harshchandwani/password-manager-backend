@@ -140,7 +140,7 @@ router.post('/resend-verification-email', async (req: Request, res: any) => {
 
         // Check if the user is found, unverified, and within the resend limit
         if (!user) return res.status(404).json({ error: "User not found" });
-        if (user.isActive) return res.status(403).json({ error: "Account is deactivated" });
+        if (!user.isActive) return res.status(403).json({ error: "Account is deactivated" });
         if (user.isUserEmailVerified) return res.status(400).json({ error: "Email already verified" });
         if (user.resendEmailAttempts >= 5) {
             await prisma.user.update({

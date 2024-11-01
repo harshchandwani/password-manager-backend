@@ -7,6 +7,7 @@ import passwordRoutes from './routes/password'; // Adjust paths as necessary
 import authenticateJWT from './middleware/auth'; // Adjust paths as necessary
 import { processEmailQueue } from './utils/email';
 import Redis from './utils/redis';
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
@@ -22,8 +23,16 @@ redis.ping().then((res) => {
     process.exit(1);
 });
 
+// Define a rate limit rule
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes.'
+});
+
 // Middleware
 app.use(cors());
+app.use(limiter);
 app.use(bodyParser.json()); // Parse JSON request bodies
 app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 
