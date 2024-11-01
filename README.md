@@ -3,7 +3,7 @@
 
 Secure Your Secrets: A Powerful Password Manager
 
-
+For Frontend: https://github.com/harshchandwani/password-manager-frontend
 
 ## Tech Stack
 
