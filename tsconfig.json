@@ -5,6 +5,8 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "outDir": "./dist",                       // Output directory for compiled files
+    "rootDir": "./src",                       // Root directory of the source files
     "forceConsistentCasingInFileNames": true,
     "typeRoots": [
       "./node_modules/@types",
